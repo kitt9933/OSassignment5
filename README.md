@@ -1,1 +1,3 @@
-Assignment 5 graphic file explorer
+# os-fileexplorer
+Graphic File Explorer
+# OSassignment5
