@@ -2,6 +2,7 @@
 #include <filesystem>
 #include <vector>
 #include <string>
+#include <algorithm>
 #include <SDL.h>
 #include <SDL_image.h>
 #include <SDL_ttf.h>
@@ -41,7 +42,14 @@ int main(int argc, char **argv)
     SDL_CreateWindowAndRenderer(WIDTH, HEIGHT, 0, &window, &renderer);
 
     std::string homeDirStr(home);
-    listDirectory(homeDirStr);
+    std::vector<std::string> currDir = listDirectory(homeDirStr);
+    sort(currDir.begin(),currDir.end());
+
+    for(int i = 0; i < currDir.size(); i++){
+
+        std::cout<< currDir.at(i)<< std::endl;
+
+    }
 
     // initialize and perform rendering loop
     AppData data;
@@ -159,7 +167,7 @@ std::vector<std::string> listDirectory(std::string path){
     
 
     for (const auto & file : directory_iterator(path)){
-        std::cout << file.path() << std::endl;
+        //std::cout << file.path() << std::endl;
         dirContents.push_back(file.path());
         
     }
