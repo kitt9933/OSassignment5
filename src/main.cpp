@@ -16,6 +16,13 @@ typedef struct AppData {
     TTF_Font *font;
     SDL_Texture *penguin;
     SDL_Texture *phrase;
+    SDL_Texture * code;
+    SDL_Texture * directory;
+    SDL_Texture * executableIcon;
+    SDL_Texture * image;
+    SDL_Texture * other;
+    SDL_Texture * video;
+
     bool phrase_selected;
     bool pengSelected;
 } AppData;
@@ -119,6 +126,15 @@ void initialize(SDL_Renderer *renderer, AppData *data_ptr)
     data_ptr->penguin = SDL_CreateTextureFromSurface(renderer, img_surf);
     SDL_FreeSurface(img_surf);
 
+    SDL_Surface *code_surf = IMG_Load("resrc/images/code.png");
+    data_ptr->code = SDL_CreateTextureFromSurface(renderer, code_surf);
+    SDL_FreeSurface(code_surf);
+
+    SDL_Surface *dir_surf = IMG_Load("resrc/images/directory.png");
+    data_ptr->directory = SDL_CreateTextureFromSurface(renderer, dir_surf);
+    SDL_FreeSurface(dir_surf);
+
+
     SDL_Color color = { 0, 0, 0 };
     SDL_Surface *phrase_surf = TTF_RenderText_Solid(data_ptr->font, "Hello World!", color);
     data_ptr->phrase = SDL_CreateTextureFromSurface(renderer, phrase_surf);
@@ -133,15 +149,24 @@ void render(SDL_Renderer *renderer, AppData *data_ptr)
     
     // TODO: draw!
     SDL_Rect rect;
-    rect.x = 200;
-    rect.y = 100;
-    rect.w = 165;
-    rect.h = 200;
-    SDL_RenderCopy(renderer, data_ptr->penguin, NULL, &rect);
+    rect.x = 10;
+    rect.y = 10;
+    rect.w = 40;
+    rect.h = 40;
+    SDL_RenderCopy(renderer, data_ptr->code, NULL, &rect);
+    //SDL_RenderCopy()
+    
+    int yVal = 60;
+    for (int i = 0; i < 12; i++){
+        rect.y = yVal;
+        SDL_RenderCopy(renderer, data_ptr->directory, NULL, &rect);
+        yVal = yVal + 50;
 
-    rect.x = 400;
-    rect.y = 300;
-    SDL_RenderCopy(renderer, data_ptr->penguin, NULL, &rect);
+    }
+
+    //rect.x = 400;
+    //rect.y = 300;
+    //SDL_RenderCopy(renderer, data_ptr->code, NULL, &rect);
 
     SDL_QueryTexture(data_ptr->phrase, NULL, NULL, &(rect.w), &(rect.h));
     rect.x = 10;
