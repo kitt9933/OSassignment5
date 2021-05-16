@@ -12,11 +12,21 @@ using std::filesystem::directory_iterator;
 #define WIDTH 800
 #define HEIGHT 600
 
+typedef struct fileInfo {
+
+    std::string name;
+    int type;
+    std::string perms;
+
+    //fileInfo(std::string name, int type, std::string perms) : name(name), type(type), perms(perms) {}
+
+}fileInfo;
+
 typedef struct AppData {
     TTF_Font *font;
     //std::string currDir;
-    std::vector <std::string> *filesInDir;
-    std::vector <int> fileTypeVals;
+    
+    std::vector <fileInfo> files;
     //SDL_Texture *penguin;
     SDL_Texture *phrase;
     SDL_Texture * code;
@@ -25,6 +35,8 @@ typedef struct AppData {
     SDL_Texture * image;
     SDL_Texture * other;
     SDL_Texture * video;
+    SDL_Texture * leftArrow;
+    SDL_Texture * rightArrow;
 
     
     SDL_Rect backRect [11];
@@ -35,11 +47,15 @@ typedef struct AppData {
     //bool pengSelected;
 } AppData;
 
+
+
+
+
 void initialize(SDL_Renderer *renderer, AppData *data_ptr);
 void render(SDL_Renderer *renderer, AppData *data_ptr);
 void quit(AppData *data_ptr);
-std::vector<std::string> listDirectory(std::string path);
-int getFileType(std::string filepath);
+std::vector<fileInfo> listDirectory(std::string path, AppData data);
+//std::vector <int> getFileTypes(std::string filepath, AppData data);
 
 int main(int argc, char **argv)
 {
@@ -58,26 +74,41 @@ int main(int argc, char **argv)
     SDL_CreateWindowAndRenderer(WIDTH, HEIGHT, 0, &window, &renderer);
 
     std::string homeDirStr(home);
-    std::string parentDir = homeDirStr + "/..";
-    
-    std::vector<std::string> currDir = listDirectory(homeDirStr);
-    currDir.push_back(parentDir);
-    
-    sort(currDir.begin(),currDir.end());
 
+    fileInfo parentDir;
+
+    AppData data;
+
+    //need to add .. directory
+    parentDir.name = homeDirStr + "/..";
+    parentDir.type = 2;
+    parentDir.perms = "rwxrwxrwx";
+
+    std::vector<fileInfo> infos = listDirectory(homeDirStr, data);
+    //std::vector<std::string> currDir;
+    data.files = infos;
+
+    infos.push_back(parentDir);
+    
+    //sort(currDir.begin(),currDir.end());
+    /*
     for(int i = 0; i < currDir.size(); i++){
 
         std::cout<< currDir.at(i)<< std::endl;
 
     }
-    
+    */
 
     // initialize and perform rendering loop
-    AppData data;
+    
     //AppData.currDir = homeDirStr;
-    data.filesInDir = &currDir;
+    //data.filesInDir = &currDir;
+    //data.fileTypeVals = getFileTypes(homeDirStr);
+    puts("b i\n");
     initialize(renderer, &data);
+    puts("a i \n");
     render(renderer, &data);
+    puts("rr\n");
     SDL_Event event;
     SDL_WaitEvent(&event);
     while (event.type != SDL_QUIT)
@@ -115,13 +146,14 @@ int main(int argc, char **argv)
                         data.offset.y = event.button.y - data.backRect[i].y;
 
                         //determine what file type it is
-                        int fileType = getFileType(currDir[i]);
+                        //int fileType = getFileType(currDir[i]);
                         //if it is a directory go into that dir
                         
                         //if it is an executable run it
 
                         break;
                     } 
+                    
                 }
                 
                 
@@ -193,18 +225,8 @@ void render(SDL_Renderer *renderer, AppData *data_ptr)
     // erase renderer content
     SDL_SetRenderDrawColor(renderer, 235, 235, 235, 255);
     SDL_RenderClear(renderer);
-    
-    // TODO: draw!
 
-    //render background
-    //SDL_Rect backRect;
-    //data_ptr->backRect[0].x = 0;
-    //data_ptr->backRect[0].y = 0;
-    //data_ptr->backRect[0].w = 800;
-    //data_ptr->backRect[0].h = 50;
-    //SDL_Rect bg = data_ptr->backRect[0];
-
-
+    //draw background we will also be clicking that instead of text
     SDL_Rect bg;
     for (int i = 0; i < 11; i++){
         data_ptr->backRect[i].x = 0;
@@ -229,7 +251,7 @@ void render(SDL_Renderer *renderer, AppData *data_ptr)
     rect.y = 10;
     rect.w = 40;
     rect.h = 40;
-    SDL_RenderCopy(renderer, data_ptr->code, NULL, &rect);
+    //SDL_RenderCopy(renderer, data_ptr->code, NULL, &rect);
     //SDL_RenderCopy()
     
     SDL_Rect textRect;
@@ -238,12 +260,13 @@ void render(SDL_Renderer *renderer, AppData *data_ptr)
     textRect.w = 200;
     textRect.h = 25;
 
-    int yVal = 60;
+    int yVal = 10;
     const char* charName;
+    
     for (int i = 0; i < 11; i++){
         rect.y = yVal;
-
-        int fileType  = data_ptr->
+        
+        int fileType  = data_ptr->files.at(i).type;
         if(fileType == 2){
             SDL_RenderCopy(renderer, data_ptr->directory, NULL, &rect);
         }
@@ -252,9 +275,10 @@ void render(SDL_Renderer *renderer, AppData *data_ptr)
         }
         yVal = yVal + 50;
 
-
+        
         //std::cout << "________________\n";
-        std::string currFileName = data_ptr->filesInDir->at(i);
+        std::string currFileName = data_ptr->files.at(i).name;
+        
         int nameLen = currFileName.length();
 
         //this is to make the names look nicer
@@ -272,9 +296,27 @@ void render(SDL_Renderer *renderer, AppData *data_ptr)
         textRect.y +=50;
     }
 
-    //rect.x = 400;
-    //rect.y = 300;
-    //SDL_RenderCopy(renderer, data_ptr->code, NULL, &rect);
+    textRect.x = 300;
+    textRect.y = 550;
+    textRect.w = 35;
+    textRect.h = 50;
+
+    //data_ptr->leftArrow.x = 350;
+    //data_ptr->leftArrow.y = 550;
+    //data_ptr->leftArrow.w = 50;
+    //data_ptr->leftArrow.h = 50;
+
+    SDL_Color color = { 0, 0, 0 };
+    SDL_Surface *lArrow = TTF_RenderText_Solid(data_ptr->font, "<<", color);
+    data_ptr->leftArrow = SDL_CreateTextureFromSurface(renderer, lArrow);
+    SDL_FreeSurface(lArrow);
+    SDL_RenderCopy(renderer, data_ptr->leftArrow, NULL, &textRect);
+
+    textRect.x = 400;
+    SDL_Surface *rArrow = TTF_RenderText_Solid(data_ptr->font, ">>", color);
+    data_ptr->rightArrow = SDL_CreateTextureFromSurface(renderer, rArrow);
+    SDL_FreeSurface(rArrow);
+    SDL_RenderCopy(renderer, data_ptr->rightArrow, NULL, &textRect);
 
     SDL_QueryTexture(data_ptr->phrase, NULL, NULL, &(rect.w), &(rect.h));
     //rect.x = 10;
@@ -288,41 +330,76 @@ void render(SDL_Renderer *renderer, AppData *data_ptr)
 void quit(AppData *data_ptr)
 {
     //SDL_DestroyTexture(data_ptr->penguin);
+    //TODO: NEED TO DESTROY TEXTURES
     SDL_DestroyTexture(data_ptr->phrase);
     TTF_CloseFont(data_ptr->font);
 }
 
-std::vector<std::string> listDirectory(std::string path){
+std::vector<fileInfo> listDirectory(std::string path, AppData data){
 
 
-    std::vector<std::string> dirContents;
+    std::vector<fileInfo> dirContents;
 
      
-
+    int dirCount = 0;
+    int count = 0;
+    int i = 0;
     for (const auto & file : directory_iterator(path)){
         //std::cout << file.path() << std::endl;
-        dirContents.push_back(file.path());
+
+
+        fileInfo currFile;
+        currFile.name = file.path();
+        currFile.perms = "rwxrwxrwx";
+        currFile.type = 2;
+        dirContents.push_back(currFile);
+        std::cout << file.path() << std::endl;
         /*
         if(std::filesystem::is_directory(file.path())){
 
             std::cout << "ITS A DIR\n";
             std::cout << file.path() << std::endl;
+            //dirCount++;
+        }
+        else {
+            std::cout << "ITS NOT DIR\n";
+            std::cout << file.path() << std::endl;
         }
         */
+       
+        //count++;
+        i++;
     }
-   
+    std::filesystem::perms p = std::filesystem::status(path).permissions();
+        std::cout << ((p & std::filesystem::perms::owner_read) != std::filesystem::perms::none ? "r" : "-")
+              << ((p & std::filesystem::perms::owner_write) != std::filesystem::perms::none ? "w" : "-")
+              << ((p & std::filesystem::perms::owner_exec) != std::filesystem::perms::none ? "x" : "-")
+              << ((p & std::filesystem::perms::group_read) != std::filesystem::perms::none ? "r" : "-")
+              << ((p & std::filesystem::perms::group_write) != std::filesystem::perms::none ? "w" : "-")
+              << ((p & std::filesystem::perms::group_write) != std::filesystem::perms::none ? "w" : "-")
+              << ((p & std::filesystem::perms::group_exec) != std::filesystem::perms::none ? "x" : "-")
+              << ((p & std::filesystem::perms::others_read) != std::filesystem::perms::none ? "r" : "-")
+              << ((p & std::filesystem::perms::others_write) != std::filesystem::perms::none ? "w" : "-")
+              << ((p & std::filesystem::perms::others_exec) != std::filesystem::perms::none ? "x" : "-")
+              << '\n';
+    //std::cout << count << std::endl;
+    //std::cout << dirCount << std::endl;
     return dirContents;
 }
+/*
+std::vector <int> getFileTypes(std::string path){
 
-int getFileType(std::string filepath){
-
-    std::filesystem::path file = filepath;
-    if(std::filesystem::is_directory(file.path())){ //it is a dir
-        return 2;
-    }
-    else{
-        return 1; // it is code
-    }
-    return 5;
+    int i = 0;
+    std::vector <int> fileVals;
+    for (const auto & file : directory_iterator(path)){
+        if(std::filesystem::is_directory(file.path())){ //it is a dir
+            fileVals.push_back(2);
+        }else{
+            fileVals.push_back(1);
+        }
+        i++;
+     }
+     return fileVals;
+    
 }
-
+*/
