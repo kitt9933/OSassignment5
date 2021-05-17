@@ -6,7 +6,7 @@ make all --print-data-base --no-builtin-variables --no-builtin-rules --question
 # This is free software: you are free to change and redistribute it.
 # There is NO WARRANTY, to the extent permitted by law.
 
-# Make data base, printed on Mon May 17 12:02:09 2021
+# Make data base, printed on Mon May 17 12:46:30 2021
 
 # Variables
 
@@ -125,7 +125,7 @@ XDG_SESSION_DESKTOP = ubuntu
 # environment
 SSH_AUTH_SOCK = /run/user/1000/keyring/ssh
 # environment
-GIO_LAUNCHED_DESKTOP_FILE_PID = 2193
+GIO_LAUNCHED_DESKTOP_FILE_PID = 4564
 # automatic
 %F = $(notdir $%)
 # environment
@@ -191,7 +191,7 @@ BINDIR = bin
 # environment
 GNOME_SHELL_SESSION_MODE = ubuntu
 # environment
-VSCODE_IPC_HOOK_EXTHOST = /run/user/1000/vscode-ipc-c9c50924-76c8-4872-960b-dc05c3650a50.sock
+VSCODE_IPC_HOOK_EXTHOST = /run/user/1000/vscode-ipc-a01b3ac4-9d40-44b2-8424-7c3e3af775a6.sock
 # makefile (from 'Makefile', line 12)
 EXEC = $(addprefix $(BINDIR)/, sdlexample)
 # default
@@ -275,7 +275,7 @@ GJS_DEBUG_OUTPUT = stderr
 # environment
 LANG = C
 # environment
-VSCODE_PID = 2238
+VSCODE_PID = 4605
 # variable set hash-table stats:
  
 # Load=133/1024=13%, Rehash=0, Collisions=29/177=16%
@@ -313,7 +313,7 @@ all: bin/sdlexample
 obj/main.o: src/main.cpp
 #  Implicit rule search has been done.
 #  Implicit/static pattern stem: 'main'
-#  Last modified 2021-05-17 11:59:03.186064756
+#  Last modified 2021-05-17 12:31:08.947986464
 #  File has been updated.
 #  Needs to be updated (-q is set).
 # automatic
@@ -352,7 +352,7 @@ Makefile:
 
 bin/sdlexample: obj/main.o
 #  Implicit rule search has not been done.
-#  Last modified 2021-05-17 11:59:03.397676047
+#  Last modified 2021-05-17 12:31:09.1198113
 #  File has been updated.
 #  Needs to be updated (-q is set).
 # variable set hash-table stats:
@@ -370,7 +370,7 @@ clean:
 # Not a target:
 src/main.cpp:
 #  Implicit rule search has been done.
-#  Last modified 2021-05-17 12:00:13.492583911
+#  Last modified 2021-05-17 12:44:17.107683721
 #  File has been updated.
 #  Successfully updated.
 
@@ -388,6 +388,6 @@ src/main.cpp:
 # strcache performance: lookups = 37 / hit rate = 35%
 # hash-table stats:
 # Load=24/8192=0%, Rehash=0, Collisions=2/37=5%
-# Finished Make data base on Mon May 17 12:02:09 2021
+# Finished Make data base on Mon May 17 12:46:30 2021
 
  
