@@ -44,6 +44,10 @@ typedef struct AppData {
     SDL_Rect backRect [11];
     SDL_Rect leftRect;
     SDL_Rect rightRect;
+
+    int pageStart = 0;
+    int pageEnd = 11;
+
     int shownFileTypeVals [11];
     bool phrase_selected;
     bool icon_selected;
@@ -153,7 +157,9 @@ int main(int argc, char **argv)
                         data.offset.x = event.button.x - data.leftRect.x;
                         data.offset.y = event.button.y - data.leftRect.y;
 
-                            
+                        data.pageStart = data.pageStart - 11;
+                        data.pageEnd =data.pageEnd - 11;
+                        render(renderer, &data);
 
                         break;
                     }
@@ -168,6 +174,10 @@ int main(int argc, char **argv)
                         data.offset.x = event.button.x - data.rightRect.x;
                         data.offset.y = event.button.y - data.rightRect.y;
 
+                        data.pageStart = data.pageStart + 11;
+                        data.pageEnd =data.pageEnd + 11;
+
+                        render(renderer, &data);
                             
 
                         break;
@@ -180,7 +190,11 @@ int main(int argc, char **argv)
                             event.button.y >= data.backRect[i].y &&
                             event.button.y <= data.backRect[i].y + data.backRect[i].h)
                         {
-                            puts("i CLICKED");
+                            if(i >= data.files.size()){
+                                break;
+                            }
+                            printf(data.files.at(i + data.pageStart).name.c_str());
+                            puts(" CLICKED");
                             data.phrase_selected = true;
                             data.offset.x = event.button.x - data.backRect[i].x;
                             data.offset.y = event.button.y - data.backRect[i].y;
@@ -306,7 +320,12 @@ void render(SDL_Renderer *renderer, AppData *data_ptr)
     const char* charName;
     const char* permName;
     const char* sizeName;
-    for (int i = 0; i < 11; i++){
+    for (int i = data_ptr->pageStart; i < data_ptr->pageEnd; i++){
+
+        if(i >= data_ptr->files.size()){
+            puts("i >= end");
+            break;
+        }
         rect.y = yVal;
         
         int fileType  = data_ptr->files.at(i).type;
