@@ -73,6 +73,21 @@ std::vector<fileInfo> listDirectory(std::string path, AppData data);
 std::vector <int> getFileTypes(std::string filepath, AppData data);
 void splitString(std::string text, char d, std::vector<std::string>& result);
 
+bool compareInfo(fileInfo a, fileInfo b){
+
+    int result  = strcmp(a.name.c_str(),b.name.c_str());
+
+    /*
+    if(result >= 0){
+        return true;
+    }
+    else{
+        return false;
+    }
+    */
+    return (a.name < b.name);
+}
+
 int main(int argc, char **argv)
 {
     char *home = getenv("HOME");
@@ -104,19 +119,21 @@ int main(int argc, char **argv)
     //std::vector<std::string> currDir;
     infos.push_back(parentDir);
     data.dir = homeDirStr;
-    data.files = infos;
+    
 
     
 
 
+    
+    std::sort(infos.begin(),infos.end(), compareInfo);
     /*
-    sort(currDir.begin(),currDir.end());
-    for(int i = 0; i < currDir.size(); i++){
+    for(int i = 0; i < infos.size(); i++){
 
-        std::cout<< currDir.at(i)<< std::endl;
+        std::cout<< infos.at(i).name<< std::endl;
 
     }
     */
+    data.files = infos;
 
     // initialize and perform rendering loop
     
@@ -167,6 +184,7 @@ int main(int argc, char **argv)
 
                         data.pageStart = data.pageStart - 11;
                         data.pageEnd =data.pageEnd - 11;
+
                         render(renderer, &data);
 
                         break;
@@ -234,7 +252,9 @@ int main(int argc, char **argv)
                                 parDir.perms = "rwxr-xr-x";
 
                                 std::vector<fileInfo> newInfo = listDirectory(newPath, data);
+                                
                                 newInfo.push_back(parDir);
+                                std::sort(newInfo.begin(),newInfo.end(), compareInfo);
                                 //std::vector<std::string> currDir;
                                 data.dir = newPath;
                                 data.files = newInfo;
@@ -255,7 +275,9 @@ int main(int argc, char **argv)
                                 parDir.perms = "rwxr-xr-x";
 
                                 std::vector<fileInfo> newInfo = listDirectory(filePath, data);
+                                
                                 newInfo.push_back(parDir);
+                                std::sort(newInfo.begin(),newInfo.end(), compareInfo);
                                 //std::vector<std::string> currDir;
                                 data.dir = filePath;
                                 data.files = newInfo;
