@@ -42,9 +42,13 @@ typedef struct AppData {
 
     
     SDL_Rect backRect [11];
+    SDL_Rect leftRect;
+    SDL_Rect rightRect;
     int shownFileTypeVals [11];
     bool phrase_selected;
     bool icon_selected;
+    bool left_selected;
+    bool right_selected;
     SDL_Point offset;
     //bool pengSelected;
 } AppData;
@@ -136,33 +140,67 @@ int main(int argc, char **argv)
             */
 
             case SDL_MOUSEBUTTONDOWN:
-                for(int i = 0; i < 11; i++){
-                    if (event.button.button == SDL_BUTTON_LEFT &&
-                        event.button.x >= data.backRect[i].x &&
-                        event.button.x <= data.backRect[i].x + data.backRect[i].w &&
-                        event.button.y >= data.backRect[i].y &&
-                        event.button.y <= data.backRect[i].y + data.backRect[i].h)
-                    {
-                        puts("i CLICKED");
-                        data.phrase_selected = true;
-                        data.offset.x = event.button.x - data.backRect[i].x;
-                        data.offset.y = event.button.y - data.backRect[i].y;
 
-                        //determine what file type it is
-                        //int fileType = getFileType(currDir[i]);
-                        //if it is a directory go into that dir
-                        
-                        //if it is an executable run it
+
+                if (event.button.button == SDL_BUTTON_LEFT &&
+                        event.button.x >= data.leftRect.x &&
+                        event.button.x <= data.leftRect.x + data.leftRect.w &&
+                        event.button.y >= data.leftRect.y &&
+                        event.button.y <= data.leftRect.y + data.leftRect.h)
+                    {
+                        puts("left CLICKED");
+                        data.left_selected = true;
+                        data.offset.x = event.button.x - data.leftRect.x;
+                        data.offset.y = event.button.y - data.leftRect.y;
+
+                            
 
                         break;
-                    } 
-                    
-                }
-                
+                    }
+                else if (event.button.button == SDL_BUTTON_LEFT &&
+                        event.button.x >= data.rightRect.x &&
+                        event.button.x <= data.rightRect.x + data.rightRect.w &&
+                        event.button.y >= data.rightRect.y &&
+                        event.button.y <= data.rightRect.y + data.rightRect.h)
+                    {
+                        puts("right CLICKED");
+                        data.right_selected = true;
+                        data.offset.x = event.button.x - data.rightRect.x;
+                        data.offset.y = event.button.y - data.rightRect.y;
+
+                            
+
+                        break;
+                    }    
+                else{
+                    for(int i = 0; i < 11; i++){
+                        if (event.button.button == SDL_BUTTON_LEFT &&
+                            event.button.x >= data.backRect[i].x &&
+                            event.button.x <= data.backRect[i].x + data.backRect[i].w &&
+                            event.button.y >= data.backRect[i].y &&
+                            event.button.y <= data.backRect[i].y + data.backRect[i].h)
+                        {
+                            puts("i CLICKED");
+                            data.phrase_selected = true;
+                            data.offset.x = event.button.x - data.backRect[i].x;
+                            data.offset.y = event.button.y - data.backRect[i].y;
+
+                            //determine what file type it is
+                            //int fileType = getFileType(currDir[i]);
+                            //if it is a directory go into that dir
+                            
+                            //if it is an executable run it
+
+                            break;
+                        } 
+                        
+                    }
+                } 
                 
                 
             case SDL_MOUSEBUTTONUP:
                 data.phrase_selected = false;
+                data.left_selected = false;
                 
                 break;
         }
@@ -248,6 +286,7 @@ void render(SDL_Renderer *renderer, AppData *data_ptr)
         }
         //bg.y +=50;
     }
+     
 
     SDL_Rect rect;
     rect.x = 10;
@@ -387,11 +426,21 @@ void render(SDL_Renderer *renderer, AppData *data_ptr)
     SDL_FreeSurface(lArrow);
     SDL_RenderCopy(renderer, data_ptr->leftArrow, NULL, &textRect);
 
+    data_ptr->leftRect.x = 300;
+    data_ptr->leftRect.y = 550;
+    data_ptr->leftRect.w = 35;
+    data_ptr->leftRect.h = 50;
+
     textRect.x = 400;
     SDL_Surface *rArrow = TTF_RenderText_Solid(data_ptr->font, ">>", color);
     data_ptr->rightArrow = SDL_CreateTextureFromSurface(renderer, rArrow);
     SDL_FreeSurface(rArrow);
     SDL_RenderCopy(renderer, data_ptr->rightArrow, NULL, &textRect);
+
+    data_ptr->rightRect.x = 400;
+    data_ptr->rightRect.y = 550;
+    data_ptr->rightRect.w = 35;
+    data_ptr->rightRect.h = 50;
 
     SDL_QueryTexture(data_ptr->phrase, NULL, NULL, &(rect.w), &(rect.h));
     //rect.x = 10;
