@@ -220,7 +220,7 @@ int main(int argc, char **argv)
                                 break;
                             }
                             std::string filePath = data.files.at(i + data.pageStart).name.c_str();
-                            printf(data.files.at(i + data.pageStart).name.c_str());
+                            printf("%s", data.files.at(i + data.pageStart).name.c_str());
                             puts(" CLICKED");
                             data.phrase_selected = true;
                             data.offset.x = event.button.x - data.backRect[i].x;
@@ -230,13 +230,12 @@ int main(int argc, char **argv)
                             //int fileType = getFileType(currDir[i]);
                             
                             int fileType = data.files.at(i+data.pageStart).type;
-                            std::cout << filePath << "is type: " <<  fileType << std::endl;
+                            std::cout << filePath << " is type: " <<  fileType << std::endl;
                             //if it is a directory go into that dir
                             std::vector<std::string> pathParts;
                             splitString(filePath,'/',pathParts);
 
                             if(strcmp(pathParts.at(pathParts.size()-1).c_str(),"..") == 0) { //if the end of the path is ".." then we cd upwards 
-
                                 std::string newPath = "/";
                                 for(int j = 0; j < pathParts.size()-2; j++){
                                     newPath +=pathParts.at(j);
@@ -244,7 +243,6 @@ int main(int argc, char **argv)
 
                                 }
                                 //std::cout << "new path is " << newPath << std::endl;
-
 
                                 fileInfo parDir;
                                 parDir.name = newPath + "/..";
@@ -261,14 +259,9 @@ int main(int argc, char **argv)
                                 data.pageStart = 0;
                                 data.pageEnd = 11;
 
-                                
-
                                 render(renderer, &data);
-
                             }
-                            else if(fileType == 2) {
-                                // this means its a directory so go into it.
-
+                            else if(fileType == 2) {        //This means it's a directory so go into it.
                                 fileInfo parDir;
                                 parDir.name = filePath + "/..";
                                 parDir.type = 2;
@@ -284,18 +277,21 @@ int main(int argc, char **argv)
                                 data.pageStart = 0;
                                 data.pageEnd = 11;
 
-                                
-
                                 render(renderer, &data);
 
-
-                            } else if(fileType == 3){
-                                // this is an execuatable so run it.
-                                //int pid = fork();
+                            } else if(fileType == 3) {      //This means it's an executable so run it.
+                                char* args[] = { (char *)pathParts[pathParts.size()-1].c_str(), NULL };
+                                int pid = fork();
+                                if(pid == 0) {
+                                    execv(data.files.at(i + data.pageStart).name.c_str(), args);
+                                }
+                            } else {    //This means it's some other file so try to run it with xdg-open.
+                                char* args[] = { (char *)"xdg-open", (char *)data.files.at(i + data.pageStart).name.c_str(), NULL };
+                                int pid = fork();
+                                if(pid == 0) {
+                                    execv("/usr/bin/xdg-open", args);
+                                }
                             }
-                            
-                            //if it is an executable run it
-
                             break;
                         } 
                         
