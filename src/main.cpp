@@ -5,6 +5,8 @@
 #include <algorithm>
 #include <SDL.h>
 #include <cmath>
+#include <cstdlib>
+#include <unistd.h>
 #include <SDL_image.h>
 #include <SDL_ttf.h>
 #include <fstream>
@@ -50,7 +52,8 @@ typedef struct AppData {
     int pageStart = 0;
     int pageEnd = 11;
 
-    int shownFileTypeVals [11];
+    std::string dir;
+    
     bool phrase_selected;
     bool icon_selected;
     bool left_selected;
@@ -95,13 +98,17 @@ int main(int argc, char **argv)
     //need to add .. directory
     parentDir.name = homeDirStr + "/..";
     parentDir.type = 2;
-    parentDir.perms = "rwxrwxrwx";
+    parentDir.perms = "rwxr-xr-x";
 
     std::vector<fileInfo> infos = listDirectory(homeDirStr, data);
     //std::vector<std::string> currDir;
+    infos.push_back(parentDir);
+    data.dir = homeDirStr;
     data.files = infos;
 
-    infos.push_back(parentDir);
+    
+
+
     /*
     sort(currDir.begin(),currDir.end());
     for(int i = 0; i < currDir.size(); i++){
@@ -207,8 +214,58 @@ int main(int argc, char **argv)
                             int fileType = data.files.at(i+data.pageStart).type;
                             std::cout << filePath << "is type: " <<  fileType << std::endl;
                             //if it is a directory go into that dir
-                            if(fileType == 2) {
+                            std::vector<std::string> pathParts;
+                            splitString(filePath,'/',pathParts);
+
+                            if(strcmp(pathParts.at(pathParts.size()-1).c_str(),"..") == 0) { //if the end of the path is ".." then we cd upwards 
+
+                                std::string newPath = "/";
+                                for(int j = 0; j < pathParts.size()-2; j++){
+                                    newPath +=pathParts.at(j);
+                                    newPath +="/";
+
+                                }
+                                //std::cout << "new path is " << newPath << std::endl;
+
+
+                                fileInfo parDir;
+                                parDir.name = newPath + "/..";
+                                parDir.type = 2;
+                                parDir.perms = "rwxr-xr-x";
+
+                                std::vector<fileInfo> newInfo = listDirectory(newPath, data);
+                                newInfo.push_back(parDir);
+                                //std::vector<std::string> currDir;
+                                data.dir = newPath;
+                                data.files = newInfo;
+                                data.pageStart = 0;
+                                data.pageEnd = 11;
+
+                                
+
+                                render(renderer, &data);
+
+                            }
+                            else if(fileType == 2) {
                                 // this means its a directory so go into it.
+
+                                fileInfo parDir;
+                                parDir.name = filePath + "/..";
+                                parDir.type = 2;
+                                parDir.perms = "rwxr-xr-x";
+
+                                std::vector<fileInfo> newInfo = listDirectory(filePath, data);
+                                newInfo.push_back(parDir);
+                                //std::vector<std::string> currDir;
+                                data.dir = filePath;
+                                data.files = newInfo;
+                                data.pageStart = 0;
+                                data.pageEnd = 11;
+
+                                
+
+                                render(renderer, &data);
+
 
                             } else if(fileType == 3){
                                 // this is an execuatable so run it.
