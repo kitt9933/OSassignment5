@@ -4,6 +4,7 @@
 #include <string>
 #include <algorithm>
 #include <SDL.h>
+#include <cmath>
 #include <SDL_image.h>
 #include <SDL_ttf.h>
 
@@ -17,6 +18,7 @@ typedef struct fileInfo {
     std::string name;
     int type;
     std::string perms;
+    std::uintmax_t fileSize;
 
     //fileInfo(std::string name, int type, std::string perms) : name(name), type(type), perms(perms) {}
 
@@ -56,6 +58,7 @@ void render(SDL_Renderer *renderer, AppData *data_ptr);
 void quit(AppData *data_ptr);
 std::vector<fileInfo> listDirectory(std::string path, AppData data);
 //std::vector <int> getFileTypes(std::string filepath, AppData data);
+void splitString(std::string text, char d, std::vector<std::string>& result);
 
 int main(int argc, char **argv)
 {
@@ -262,7 +265,8 @@ void render(SDL_Renderer *renderer, AppData *data_ptr)
 
     int yVal = 10;
     const char* charName;
-    
+    const char* permName;
+    const char* sizeName;
     for (int i = 0; i < 11; i++){
         rect.y = yVal;
         
@@ -278,12 +282,16 @@ void render(SDL_Renderer *renderer, AppData *data_ptr)
         
         //std::cout << "________________\n";
         std::string currFileName = data_ptr->files.at(i).name;
-        
-        int nameLen = currFileName.length();
+        std::vector<std::string> nameParts;
+        splitString(currFileName,'/',nameParts);
+
+        std::string shortName = nameParts.at(nameParts.size()-1);
+
+        int nameLen = shortName.length();
 
         //this is to make the names look nicer
         textRect.w = 9 * nameLen;
-        charName = currFileName.c_str();
+        charName = shortName.c_str();
         //std::cout << currFileName << std::endl;
         
         SDL_Color color = { 0, 120, 120 };
@@ -292,7 +300,62 @@ void render(SDL_Renderer *renderer, AppData *data_ptr)
         SDL_FreeSurface(phrase_surf);
 
         SDL_RenderCopy(renderer, data_ptr->phrase, NULL, &textRect);
-        
+
+        //render permission
+        permName = data_ptr->files.at(i).perms.c_str(); // convert the string that represents perms to a const char
+        SDL_Surface *perm_surf = TTF_RenderText_Solid(data_ptr->font, permName, color);
+        data_ptr->phrase = SDL_CreateTextureFromSurface(renderer, perm_surf);
+        SDL_FreeSurface(perm_surf);
+
+        textRect.x +=450;
+        textRect.w = 100;
+        SDL_RenderCopy(renderer, data_ptr->phrase, NULL, &textRect);
+
+        //render file size
+        textRect.x +=175;
+        std::uintmax_t sizeInBytes = data_ptr->files.at(i).fileSize;
+
+        std::string sizeInfo;
+        if(sizeInBytes == 0){//this is an error
+            sizeInfo = "unknown";
+            textRect.w = 100;
+        }
+        else if(sizeInBytes >= 1024){ //show in KiB
+            int sizeInK = sizeInBytes/1024;
+            sizeInfo = std::to_string(sizeInK);
+            
+            sizeInfo += " KiB";
+            textRect.w = sizeInfo.length() * 7;
+        }
+        else if(sizeInBytes >= 10480576){ //show in MiB
+            int sizeInM = sizeInBytes/1048576;
+            sizeInfo = std::to_string(sizeInM);
+            
+            sizeInfo += " MiB";
+            textRect.w = sizeInfo.length() * 7;
+        }
+        else if(sizeInBytes >= 1073741824){
+            long sizeInG = sizeInBytes/1073741824;
+            sizeInfo = std::to_string(sizeInG);
+            
+            sizeInfo += " GiB";
+            textRect.w = sizeInfo.length() * 7;
+
+        }
+        else{ //it is shown in bytes
+            sizeInfo = std::to_string(sizeInBytes);
+            sizeInfo += " B";
+            textRect.w = sizeInfo.length() * 7;
+        }
+        sizeName = sizeInfo.c_str();
+        SDL_Surface *size_surf = TTF_RenderText_Solid(data_ptr->font, sizeName, color);
+        data_ptr->phrase = SDL_CreateTextureFromSurface(renderer, size_surf);
+        SDL_FreeSurface(size_surf);
+        SDL_RenderCopy(renderer, data_ptr->phrase, NULL, &textRect);
+
+        textRect.x -=625;
+
+
         textRect.y +=50;
     }
 
@@ -350,56 +413,97 @@ std::vector<fileInfo> listDirectory(std::string path, AppData data){
 
         fileInfo currFile;
         currFile.name = file.path();
-        currFile.perms = "rwxrwxrwx";
+        //currFile.perms = "rwxrwxrwx";
         currFile.type = 2;
+        try{
+            currFile.fileSize = std::filesystem::file_size(file.path());
+        }
+        catch(std::filesystem::filesystem_error& e){
+
+            currFile.fileSize = 0;
+        }
+        std::cout << "size is " << currFile.fileSize << std::endl;
+        
+       
+
+        std::filesystem::perms p = std::filesystem::status(file.path()).permissions();
+        std::string stringBuild;
+        stringBuild += ((p & std::filesystem::perms::owner_read) != std::filesystem::perms::none ? "r" : "-");
+        stringBuild += ((p & std::filesystem::perms::owner_write) != std::filesystem::perms::none ? "w" : "-");
+        stringBuild += ((p & std::filesystem::perms::owner_exec) != std::filesystem::perms::none ? "x" : "-");
+        stringBuild += ((p & std::filesystem::perms::group_read) != std::filesystem::perms::none ? "r" : "-");
+        stringBuild += ((p & std::filesystem::perms::group_write) != std::filesystem::perms::none ? "w" : "-");
+        stringBuild += ((p & std::filesystem::perms::group_write) != std::filesystem::perms::none ? "w" : "-");
+        stringBuild += ((p & std::filesystem::perms::group_exec) != std::filesystem::perms::none ? "x" : "-");
+        stringBuild += ((p & std::filesystem::perms::others_read) != std::filesystem::perms::none ? "r" : "-");
+        stringBuild += ((p & std::filesystem::perms::others_write) != std::filesystem::perms::none ? "w" : "-");
+        stringBuild += ((p & std::filesystem::perms::others_exec) != std::filesystem::perms::none ? "x" : "-");
+        
+        //count++;
+        std::cout << stringBuild << std::endl;
+        currFile.perms = stringBuild;
         dirContents.push_back(currFile);
         std::cout << file.path() << std::endl;
-        /*
-        if(std::filesystem::is_directory(file.path())){
-
-            std::cout << "ITS A DIR\n";
-            std::cout << file.path() << std::endl;
-            //dirCount++;
-        }
-        else {
-            std::cout << "ITS NOT DIR\n";
-            std::cout << file.path() << std::endl;
-        }
-        */
-       
-        //count++;
         i++;
     }
-    std::filesystem::perms p = std::filesystem::status(path).permissions();
-        std::cout << ((p & std::filesystem::perms::owner_read) != std::filesystem::perms::none ? "r" : "-")
-              << ((p & std::filesystem::perms::owner_write) != std::filesystem::perms::none ? "w" : "-")
-              << ((p & std::filesystem::perms::owner_exec) != std::filesystem::perms::none ? "x" : "-")
-              << ((p & std::filesystem::perms::group_read) != std::filesystem::perms::none ? "r" : "-")
-              << ((p & std::filesystem::perms::group_write) != std::filesystem::perms::none ? "w" : "-")
-              << ((p & std::filesystem::perms::group_write) != std::filesystem::perms::none ? "w" : "-")
-              << ((p & std::filesystem::perms::group_exec) != std::filesystem::perms::none ? "x" : "-")
-              << ((p & std::filesystem::perms::others_read) != std::filesystem::perms::none ? "r" : "-")
-              << ((p & std::filesystem::perms::others_write) != std::filesystem::perms::none ? "w" : "-")
-              << ((p & std::filesystem::perms::others_exec) != std::filesystem::perms::none ? "x" : "-")
-              << '\n';
+    
     //std::cout << count << std::endl;
     //std::cout << dirCount << std::endl;
     return dirContents;
 }
-/*
-std::vector <int> getFileTypes(std::string path){
 
-    int i = 0;
-    std::vector <int> fileVals;
-    for (const auto & file : directory_iterator(path)){
-        if(std::filesystem::is_directory(file.path())){ //it is a dir
-            fileVals.push_back(2);
-        }else{
-            fileVals.push_back(1);
+void splitString(std::string text, char d, std::vector<std::string>& result)
+{
+    enum states { NONE, IN_WORD, IN_STRING } state = NONE;
+
+    int i;
+    std::string token;
+    result.clear();
+    for (i = 0; i < text.length(); i++)
+    {
+        char c = text[i];
+        switch (state) {
+            case NONE:
+                if (c != d)
+                {
+                    if (c == '\"')
+                    {
+                        state = IN_STRING;
+                        token = "";
+                    }
+                    else
+                    {
+                        state = IN_WORD;
+                        token = c;
+                    }
+                }
+                break;
+            case IN_WORD:
+                if (c == d)
+                {
+                    result.push_back(token);
+                    state = NONE;
+                }
+                else
+                {
+                    token += c;
+                }
+                break;
+            case IN_STRING:
+                if (c == '\"')
+                {
+                    result.push_back(token);
+                    state = NONE;
+                }
+                else
+                {
+                    token += c;
+                }
+                break;
         }
-        i++;
-     }
-     return fileVals;
-    
+    }
+    if (state != NONE)
+    {
+        result.push_back(token);
+    }
 }
-*/
