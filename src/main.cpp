@@ -271,11 +271,23 @@ void render(SDL_Renderer *renderer, AppData *data_ptr)
         rect.y = yVal;
         
         int fileType  = data_ptr->files.at(i).type;
-        if(fileType == 2){
+        if(fileType == 1){
+            SDL_RenderCopy(renderer, data_ptr->code, NULL, &rect);
+        }
+        else if(fileType == 2){
             SDL_RenderCopy(renderer, data_ptr->directory, NULL, &rect);
         }
-        else{
-            SDL_RenderCopy(renderer, data_ptr->code, NULL, &rect);
+        else if(fileType == 3){
+            SDL_RenderCopy(renderer, data_ptr->executableIcon, NULL, &rect);
+        }
+        else if(fileType == 4){
+            SDL_RenderCopy(renderer, data_ptr->image, NULL, &rect);
+        }
+        else if(fileType == 5){
+            SDL_RenderCopy(renderer, data_ptr->other, NULL, &rect);
+        }
+        else if(fileType == 6){
+            SDL_RenderCopy(renderer, data_ptr->video, NULL, &rect);
         }
         yVal = yVal + 50;
 
@@ -409,12 +421,47 @@ std::vector<fileInfo> listDirectory(std::string path, AppData data){
     int i = 0;
     for (const auto & file : directory_iterator(path)){
         //std::cout << file.path() << std::endl;
-
+        std::filesystem::perms p = std::filesystem::status(file.path()).permissions();
 
         fileInfo currFile;
+        //get file name and path
         currFile.name = file.path();
-        //currFile.perms = "rwxrwxrwx";
-        currFile.type = 2;
+        
+        //get file type
+        if(std::filesystem::is_directory(file.path()))
+        {
+            currFile.type = 2;//it a dir
+        }
+        //check for execute permissions
+        else if(((p & std::filesystem::perms::owner_exec) != std::filesystem::perms::none) || ((p & std::filesystem::perms::group_exec) != std::filesystem::perms::none) || ((p & std::filesystem::perms::others_exec) != std::filesystem::perms::none)){
+            currFile.type = 3;//it an executable
+        }
+        
+        else{
+
+            std::vector <std::string> filePart;
+
+            splitString(currFile.name,'.',filePart);
+            std::string fileEndStr = filePart.at(filePart.size()-1);
+            const char* fileEnd = fileEndStr.c_str();
+            //std::cout << "fileEnd is " << fileEnd << "\n";
+            if(strcmp(fileEnd,"jpg") == 0|| strcmp(fileEnd,"jpeg") == 0 || strcmp(fileEnd,"png")== 0 || strcmp(fileEnd,"tif")== 0 || strcmp(fileEnd,"tiff")== 0 || strcmp(fileEnd,"gif")== 0){
+                currFile.type = 4;//it an image
+            }
+            else if(strcmp(fileEnd,"mp4")== 0 ||strcmp(fileEnd,"mov")== 0 || strcmp(fileEnd,"mkv")== 0 || strcmp(fileEnd,"avi")== 0 || strcmp(fileEnd,"webm")== 0){
+                currFile.type = 6;//it a video
+            }
+            else if(strcmp(fileEnd,"h")== 0 || strcmp(fileEnd,"c")== 0 || strcmp(fileEnd,"cpp")== 0 || strcmp(fileEnd,"py")== 0 || strcmp(fileEnd,"java")== 0 || strcmp(fileEnd,"js")== 0){
+                currFile.type = 1;//it a code
+            }
+            else{
+                currFile.type = 5;//it a other
+            }
+            
+        }
+
+
+        //get file size
         try{
             currFile.fileSize = std::filesystem::file_size(file.path());
         }
@@ -422,17 +469,17 @@ std::vector<fileInfo> listDirectory(std::string path, AppData data){
 
             currFile.fileSize = 0;
         }
+        std::cout << "type is" << currFile.type << std::endl;
         std::cout << "size is " << currFile.fileSize << std::endl;
         
-       
+       //get permisisons
 
-        std::filesystem::perms p = std::filesystem::status(file.path()).permissions();
+        
         std::string stringBuild;
         stringBuild += ((p & std::filesystem::perms::owner_read) != std::filesystem::perms::none ? "r" : "-");
         stringBuild += ((p & std::filesystem::perms::owner_write) != std::filesystem::perms::none ? "w" : "-");
         stringBuild += ((p & std::filesystem::perms::owner_exec) != std::filesystem::perms::none ? "x" : "-");
         stringBuild += ((p & std::filesystem::perms::group_read) != std::filesystem::perms::none ? "r" : "-");
-        stringBuild += ((p & std::filesystem::perms::group_write) != std::filesystem::perms::none ? "w" : "-");
         stringBuild += ((p & std::filesystem::perms::group_write) != std::filesystem::perms::none ? "w" : "-");
         stringBuild += ((p & std::filesystem::perms::group_exec) != std::filesystem::perms::none ? "x" : "-");
         stringBuild += ((p & std::filesystem::perms::others_read) != std::filesystem::perms::none ? "r" : "-");
