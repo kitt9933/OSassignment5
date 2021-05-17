@@ -7,6 +7,8 @@
 #include <cmath>
 #include <SDL_image.h>
 #include <SDL_ttf.h>
+#include <fstream>
+#include <cstdlib>
 
 using std::filesystem::directory_iterator;
 
@@ -65,7 +67,7 @@ void initialize(SDL_Renderer *renderer, AppData *data_ptr);
 void render(SDL_Renderer *renderer, AppData *data_ptr);
 void quit(AppData *data_ptr);
 std::vector<fileInfo> listDirectory(std::string path, AppData data);
-//std::vector <int> getFileTypes(std::string filepath, AppData data);
+std::vector <int> getFileTypes(std::string filepath, AppData data);
 void splitString(std::string text, char d, std::vector<std::string>& result);
 
 int main(int argc, char **argv)
@@ -100,9 +102,8 @@ int main(int argc, char **argv)
     data.files = infos;
 
     infos.push_back(parentDir);
-    
-    //sort(currDir.begin(),currDir.end());
     /*
+    sort(currDir.begin(),currDir.end());
     for(int i = 0; i < currDir.size(); i++){
 
         std::cout<< currDir.at(i)<< std::endl;
@@ -112,7 +113,7 @@ int main(int argc, char **argv)
 
     // initialize and perform rendering loop
     
-    //AppData.currDir = homeDirStr;
+    //data.currDir = homeDirStr;
     //data.filesInDir = &currDir;
     //data.fileTypeVals = getFileTypes(homeDirStr);
     puts("b i\n");
@@ -193,6 +194,7 @@ int main(int argc, char **argv)
                             if(i >= data.files.size()){
                                 break;
                             }
+                            std::string filePath = data.files.at(i + data.pageStart).name.c_str();
                             printf(data.files.at(i + data.pageStart).name.c_str());
                             puts(" CLICKED");
                             data.phrase_selected = true;
@@ -201,7 +203,17 @@ int main(int argc, char **argv)
 
                             //determine what file type it is
                             //int fileType = getFileType(currDir[i]);
+                            
+                            int fileType = data.files.at(i+data.pageStart).type;
+                            std::cout << filePath << "is type: " <<  fileType << std::endl;
                             //if it is a directory go into that dir
+                            if(fileType == 2) {
+                                // this means its a directory so go into it.
+
+                            } else if(fileType == 3){
+                                // this is an execuatable so run it.
+                                //int pid = fork();
+                            }
                             
                             //if it is an executable run it
 

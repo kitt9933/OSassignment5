@@ -1,0 +1,6 @@
+make --dry-run --always-make --keep-going --print-directory
+make: Entering directory '/home/zackh22/Desktop/Workspace/FinalExamProject/OSassignment5'
+g++ -std=c++17 -c -o obj/main.o src/main.cpp -I/usr/include/SDL2 -I./include
+g++ -std=c++17 -o bin/sdlexample obj/main.o -lSDL2 -lSDL2_image -lSDL2_ttf
+make: Leaving directory '/home/zackh22/Desktop/Workspace/FinalExamProject/OSassignment5'
+ 
