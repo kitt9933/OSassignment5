@@ -115,10 +115,10 @@ int main(int argc, char **argv)
                         event.button.y <= data.leftRect.y + data.leftRect.h)
                     {
                         if(data.pageStart-11 < 0){
-                            puts("Cannot go left");
+                            //puts("Cannot go left");
                             break;
                         }
-                        puts("Left CLICKED");
+                        //puts("Left CLICKED");
                         data.left_selected = true;
                         data.offset.x = event.button.x - data.leftRect.x;
                         data.offset.y = event.button.y - data.leftRect.y;
@@ -136,10 +136,10 @@ int main(int argc, char **argv)
                         event.button.y <= data.rightRect.y + data.rightRect.h)
                     {
                         if(data.pageStart+11 >= data.files.size()){
-                            puts("Cannot go right");
+                            //puts("Cannot go right");
                             break;
                         }
-                        puts("Right CLICKED");
+                        //puts("Right CLICKED");
                         data.right_selected = true;
                         data.offset.x = event.button.x - data.rightRect.x;
                         data.offset.y = event.button.y - data.rightRect.y;
@@ -165,8 +165,8 @@ int main(int argc, char **argv)
                             }
 
                             std::string filePath = data.files.at(i + data.pageStart).name.c_str();
-                            printf("%s", data.files.at(i + data.pageStart).name.c_str());
-                            puts(" CLICKED");
+                            //printf("%s", data.files.at(i + data.pageStart).name.c_str());
+                            //puts(" CLICKED");
                             data.phrase_selected = true;
                             data.offset.x = event.button.x - data.backRect[i].x;
                             data.offset.y = event.button.y - data.backRect[i].y;
