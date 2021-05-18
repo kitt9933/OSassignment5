@@ -18,33 +18,26 @@ using std::filesystem::directory_iterator;
 #define HEIGHT 600
 
 typedef struct fileInfo {
-
     std::string name;
     int type;
     std::string perms;
     std::uintmax_t fileSize;
-
-    //fileInfo(std::string name, int type, std::string perms) : name(name), type(type), perms(perms) {}
-
 }fileInfo;
 
 typedef struct AppData {
     TTF_Font *font;
-    //std::string currDir;
     
     std::vector <fileInfo> files;
-    //SDL_Texture *penguin;
     SDL_Texture *phrase;
-    SDL_Texture * code;
-    SDL_Texture * directory;
-    SDL_Texture * executableIcon;
-    SDL_Texture * image;
-    SDL_Texture * other;
-    SDL_Texture * video;
-    SDL_Texture * leftArrow;
-    SDL_Texture * rightArrow;
+    SDL_Texture *code;
+    SDL_Texture *directory;
+    SDL_Texture *executableIcon;
+    SDL_Texture *image;
+    SDL_Texture *other;
+    SDL_Texture *video;
+    SDL_Texture *leftArrow;
+    SDL_Texture *rightArrow;
 
-    
     SDL_Rect backRect [11];
     SDL_Rect leftRect;
     SDL_Rect rightRect;
@@ -59,10 +52,7 @@ typedef struct AppData {
     bool left_selected;
     bool right_selected;
     SDL_Point offset;
-    //bool pengSelected;
 } AppData;
-
-
 
 
 
@@ -72,27 +62,13 @@ void quit(AppData *data_ptr);
 std::vector<fileInfo> listDirectory(std::string path, AppData data);
 std::vector <int> getFileTypes(std::string filepath, AppData data);
 void splitString(std::string text, char d, std::vector<std::string>& result);
+bool compareInfo(fileInfo file_a, fileInfo file_b);
 
-bool compareInfo(fileInfo a, fileInfo b){
 
-    int result  = strcmp(a.name.c_str(),b.name.c_str());
-
-    /*
-    if(result >= 0){
-        return true;
-    }
-    else{
-        return false;
-    }
-    */
-    return (a.name < b.name);
-}
 
 int main(int argc, char **argv)
 {
     char *home = getenv("HOME");
-    
-    printf("HOME: %s\n", home);
 
     // initializing SDL as Video
     SDL_Init(SDL_INIT_VIDEO);
@@ -105,9 +81,7 @@ int main(int argc, char **argv)
     SDL_CreateWindowAndRenderer(WIDTH, HEIGHT, 0, &window, &renderer);
 
     std::string homeDirStr(home);
-
     fileInfo parentDir;
-
     AppData data;
 
     //need to add .. directory
@@ -116,99 +90,68 @@ int main(int argc, char **argv)
     parentDir.perms = "rwxr-xr-x";
 
     std::vector<fileInfo> infos = listDirectory(homeDirStr, data);
-    //std::vector<std::string> currDir;
     infos.push_back(parentDir);
     data.dir = homeDirStr;
     
-
-    
-
-
-    
     std::sort(infos.begin(),infos.end(), compareInfo);
-    /*
-    for(int i = 0; i < infos.size(); i++){
-
-        std::cout<< infos.at(i).name<< std::endl;
-
-    }
-    */
     data.files = infos;
 
     // initialize and perform rendering loop
-    
-    //data.currDir = homeDirStr;
-    //data.filesInDir = &currDir;
-    //data.fileTypeVals = getFileTypes(homeDirStr);
-    puts("b i\n");
     initialize(renderer, &data);
-    puts("a i \n");
     render(renderer, &data);
-    puts("rr\n");
     SDL_Event event;
     SDL_WaitEvent(&event);
     while (event.type != SDL_QUIT)
     {
         SDL_WaitEvent(&event);
-        
         switch(event.type)
         {
-            /*
-            case SDL_MOUSEMOTION:
-                if (data.penguin_selected)
-                {
-                    data.penguin_rect.x = event.motion.x - data.offset.x;
-                    data.penguin_rect.y = event.motion.y - data.offset.y;
-                }
-                else if (data.phrase_selected)
-                {
-                    data.phrase_rect.x = event.motion.x - data.offset.x;
-                    data.phrase_rect.y = event.motion.y - data.offset.y;
-                }
-                break;
-            */
-
             case SDL_MOUSEBUTTONDOWN:
-
-
+                //If "page left" button is clicked
                 if (event.button.button == SDL_BUTTON_LEFT &&
                         event.button.x >= data.leftRect.x &&
                         event.button.x <= data.leftRect.x + data.leftRect.w &&
                         event.button.y >= data.leftRect.y &&
                         event.button.y <= data.leftRect.y + data.leftRect.h)
                     {
-                        puts("left CLICKED");
+                        if(data.pageStart-11 < 0){
+                            puts("Cannot go left");
+                            break;
+                        }
+                        puts("Left CLICKED");
                         data.left_selected = true;
                         data.offset.x = event.button.x - data.leftRect.x;
                         data.offset.y = event.button.y - data.leftRect.y;
-
                         data.pageStart = data.pageStart - 11;
                         data.pageEnd =data.pageEnd - 11;
 
                         render(renderer, &data);
-
                         break;
                     }
+                //If "page right" button is clicked
                 else if (event.button.button == SDL_BUTTON_LEFT &&
                         event.button.x >= data.rightRect.x &&
                         event.button.x <= data.rightRect.x + data.rightRect.w &&
                         event.button.y >= data.rightRect.y &&
                         event.button.y <= data.rightRect.y + data.rightRect.h)
                     {
-                        puts("right CLICKED");
+                        if(data.pageStart+11 >= data.files.size()){
+                            puts("Cannot go right");
+                            break;
+                        }
+                        puts("Right CLICKED");
                         data.right_selected = true;
                         data.offset.x = event.button.x - data.rightRect.x;
                         data.offset.y = event.button.y - data.rightRect.y;
-
                         data.pageStart = data.pageStart + 11;
-                        data.pageEnd =data.pageEnd + 11;
+                        data.pageEnd = data.pageEnd + 11;
 
                         render(renderer, &data);
-                            
-
                         break;
-                    }    
+                    }
+                //If selection is anywhere else on the application    
                 else{
+                    //Check every file rectangle to see which one was clicked
                     for(int i = 0; i < 11; i++){
                         if (event.button.button == SDL_BUTTON_LEFT &&
                             event.button.x >= data.backRect[i].x &&
@@ -216,34 +159,30 @@ int main(int argc, char **argv)
                             event.button.y >= data.backRect[i].y &&
                             event.button.y <= data.backRect[i].y + data.backRect[i].h)
                         {
-                            if(i >= data.files.size()){
+                            //If the file rectangle click on does not contain a file then exit
+                            if(data.pageStart+i >= data.files.size()){
                                 break;
                             }
+
                             std::string filePath = data.files.at(i + data.pageStart).name.c_str();
                             printf("%s", data.files.at(i + data.pageStart).name.c_str());
                             puts(" CLICKED");
                             data.phrase_selected = true;
                             data.offset.x = event.button.x - data.backRect[i].x;
                             data.offset.y = event.button.y - data.backRect[i].y;
-
-                            //determine what file type it is
-                            //int fileType = getFileType(currDir[i]);
                             
                             int fileType = data.files.at(i+data.pageStart).type;
-                            std::cout << filePath << " is type: " <<  fileType << std::endl;
-                            //if it is a directory go into that dir
                             std::vector<std::string> pathParts;
                             splitString(filePath,'/',pathParts);
-
+                            if(data.files.at(i + data.pageStart).name == "//..") {
+                                break;
+                            }
                             if(strcmp(pathParts.at(pathParts.size()-1).c_str(),"..") == 0) { //if the end of the path is ".." then we cd upwards 
                                 std::string newPath = "/";
                                 for(int j = 0; j < pathParts.size()-2; j++){
                                     newPath +=pathParts.at(j);
                                     newPath +="/";
-
                                 }
-                                //std::cout << "new path is " << newPath << std::endl;
-
                                 fileInfo parDir;
                                 parDir.name = newPath + "/..";
                                 parDir.type = 2;
@@ -253,7 +192,6 @@ int main(int argc, char **argv)
                                 
                                 newInfo.push_back(parDir);
                                 std::sort(newInfo.begin(),newInfo.end(), compareInfo);
-                                //std::vector<std::string> currDir;
                                 data.dir = newPath;
                                 data.files = newInfo;
                                 data.pageStart = 0;
@@ -271,7 +209,6 @@ int main(int argc, char **argv)
                                 
                                 newInfo.push_back(parDir);
                                 std::sort(newInfo.begin(),newInfo.end(), compareInfo);
-                                //std::vector<std::string> currDir;
                                 data.dir = filePath;
                                 data.files = newInfo;
                                 data.pageStart = 0;
@@ -294,22 +231,16 @@ int main(int argc, char **argv)
                             }
                             break;
                         } 
-                        
                     }
                 } 
-                
-                
             case SDL_MOUSEBUTTONUP:
                 data.phrase_selected = false;
                 data.left_selected = false;
-                
                 break;
         }
-        
-        //render(renderer, &data);
     }
 
-    // clean up
+    //clean up
     quit(&data);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
@@ -317,17 +248,12 @@ int main(int argc, char **argv)
     IMG_Quit();
     SDL_Quit();
 
-
     return 0;
 }
 
 void initialize(SDL_Renderer *renderer, AppData *data_ptr)
 {
     data_ptr->font = TTF_OpenFont("resrc/OpenSans-Regular.ttf", 24);
-
-    //SDL_Surface *img_surf = IMG_Load("resrc/linux-penguin.png");
-    //data_ptr->penguin = SDL_CreateTextureFromSurface(renderer, img_surf);
-    //SDL_FreeSurface(img_surf);
 
     SDL_Surface *code_surf = IMG_Load("resrc/images/code.png");
     data_ptr->code = SDL_CreateTextureFromSurface(renderer, code_surf);
@@ -385,7 +311,6 @@ void render(SDL_Renderer *renderer, AppData *data_ptr)
 
             SDL_SetRenderDrawColor(renderer,150,150,150,255);
         }
-        //bg.y +=50;
     }
      
 
@@ -394,8 +319,6 @@ void render(SDL_Renderer *renderer, AppData *data_ptr)
     rect.y = 10;
     rect.w = 40;
     rect.h = 40;
-    //SDL_RenderCopy(renderer, data_ptr->code, NULL, &rect);
-    //SDL_RenderCopy()
     
     SDL_Rect textRect;
     textRect.x = 60;
@@ -410,7 +333,6 @@ void render(SDL_Renderer *renderer, AppData *data_ptr)
     for (int i = data_ptr->pageStart; i < data_ptr->pageEnd; i++){
 
         if(i >= data_ptr->files.size()){
-            puts("i >= end");
             break;
         }
         rect.y = yVal;
@@ -436,8 +358,6 @@ void render(SDL_Renderer *renderer, AppData *data_ptr)
         }
         yVal = yVal + 50;
 
-        
-        //std::cout << "________________\n";
         std::string currFileName = data_ptr->files.at(i).name;
         std::vector<std::string> nameParts;
         splitString(currFileName,'/',nameParts);
@@ -449,7 +369,6 @@ void render(SDL_Renderer *renderer, AppData *data_ptr)
         //this is to make the names look nicer
         textRect.w = 9 * nameLen;
         charName = shortName.c_str();
-        //std::cout << currFileName << std::endl;
         
         SDL_Color color = { 0, 120, 120 };
         SDL_Surface *phrase_surf = TTF_RenderText_Solid(data_ptr->font, charName, color);
@@ -459,7 +378,7 @@ void render(SDL_Renderer *renderer, AppData *data_ptr)
         SDL_RenderCopy(renderer, data_ptr->phrase, NULL, &textRect);
 
         //render permission
-        permName = data_ptr->files.at(i).perms.c_str(); // convert the string that represents perms to a const char
+        permName = data_ptr->files.at(i).perms.c_str(); //convert the string that represents perms to a const char
         SDL_Surface *perm_surf = TTF_RenderText_Solid(data_ptr->font, permName, color);
         data_ptr->phrase = SDL_CreateTextureFromSurface(renderer, perm_surf);
         SDL_FreeSurface(perm_surf);
@@ -473,7 +392,7 @@ void render(SDL_Renderer *renderer, AppData *data_ptr)
         std::uintmax_t sizeInBytes = data_ptr->files.at(i).fileSize;
 
         std::string sizeInfo;
-        if(sizeInBytes == 0){//this is an error
+        if(sizeInBytes == 0){//is not a file
             sizeInfo = "unknown";
             textRect.w = 100;
         }
@@ -521,11 +440,6 @@ void render(SDL_Renderer *renderer, AppData *data_ptr)
     textRect.w = 35;
     textRect.h = 50;
 
-    //data_ptr->leftArrow.x = 350;
-    //data_ptr->leftArrow.y = 550;
-    //data_ptr->leftArrow.w = 50;
-    //data_ptr->leftArrow.h = 50;
-
     SDL_Color color = { 0, 0, 0 };
     SDL_Surface *lArrow = TTF_RenderText_Solid(data_ptr->font, "<<", color);
     data_ptr->leftArrow = SDL_CreateTextureFromSurface(renderer, lArrow);
@@ -549,9 +463,6 @@ void render(SDL_Renderer *renderer, AppData *data_ptr)
     data_ptr->rightRect.h = 50;
 
     SDL_QueryTexture(data_ptr->phrase, NULL, NULL, &(rect.w), &(rect.h));
-    //rect.x = 10;
-    //rect.y = 500;
-    //SDL_RenderCopy(renderer, data_ptr->phrase, NULL, &rect);
 
     // show rendered frame
     SDL_RenderPresent(renderer);
@@ -559,23 +470,25 @@ void render(SDL_Renderer *renderer, AppData *data_ptr)
 
 void quit(AppData *data_ptr)
 {
-    //SDL_DestroyTexture(data_ptr->penguin);
-    //TODO: NEED TO DESTROY TEXTURES
-    SDL_DestroyTexture(data_ptr->phrase);
     TTF_CloseFont(data_ptr->font);
+    SDL_DestroyTexture(data_ptr->code);
+    SDL_DestroyTexture(data_ptr->directory);
+    SDL_DestroyTexture(data_ptr->executableIcon);
+    SDL_DestroyTexture(data_ptr->image);
+    SDL_DestroyTexture(data_ptr->other);
+    SDL_DestroyTexture(data_ptr->video);
+    SDL_DestroyTexture(data_ptr->phrase);
+    SDL_DestroyTexture(data_ptr->leftArrow);
+    SDL_DestroyTexture(data_ptr->rightArrow);
 }
 
 std::vector<fileInfo> listDirectory(std::string path, AppData data){
-
-
     std::vector<fileInfo> dirContents;
 
-     
     int dirCount = 0;
     int count = 0;
     int i = 0;
     for (const auto & file : directory_iterator(path)){
-        //std::cout << file.path() << std::endl;
         std::filesystem::perms p = std::filesystem::status(file.path()).permissions();
 
         fileInfo currFile;
@@ -593,24 +506,21 @@ std::vector<fileInfo> listDirectory(std::string path, AppData data){
         }
         
         else{
-
             std::vector <std::string> filePart;
-
             splitString(currFile.name,'.',filePart);
             std::string fileEndStr = filePart.at(filePart.size()-1);
             const char* fileEnd = fileEndStr.c_str();
-            //std::cout << "fileEnd is " << fileEnd << "\n";
             if(strcmp(fileEnd,"jpg") == 0|| strcmp(fileEnd,"jpeg") == 0 || strcmp(fileEnd,"png")== 0 || strcmp(fileEnd,"tif")== 0 || strcmp(fileEnd,"tiff")== 0 || strcmp(fileEnd,"gif")== 0){
-                currFile.type = 4;//it an image
+                currFile.type = 4;  //image
             }
             else if(strcmp(fileEnd,"mp4")== 0 ||strcmp(fileEnd,"mov")== 0 || strcmp(fileEnd,"mkv")== 0 || strcmp(fileEnd,"avi")== 0 || strcmp(fileEnd,"webm")== 0){
-                currFile.type = 6;//it a video
+                currFile.type = 6;  //video
             }
             else if(strcmp(fileEnd,"h")== 0 || strcmp(fileEnd,"c")== 0 || strcmp(fileEnd,"cpp")== 0 || strcmp(fileEnd,"py")== 0 || strcmp(fileEnd,"java")== 0 || strcmp(fileEnd,"js")== 0){
-                currFile.type = 1;//it a code
+                currFile.type = 1;  //code
             }
             else{
-                currFile.type = 5;//it a other
+                currFile.type = 5;  //other
             }
             
         }
@@ -624,12 +534,10 @@ std::vector<fileInfo> listDirectory(std::string path, AppData data){
 
             currFile.fileSize = 0;
         }
-        std::cout << "type is" << currFile.type << std::endl;
-        std::cout << "size is " << currFile.fileSize << std::endl;
+        //std::cout << "type is" << currFile.type << std::endl;
+        //std::cout << "size is " << currFile.fileSize << std::endl;
         
-       //get permisisons
-
-        
+        //get permisisons
         std::string stringBuild;
         stringBuild += ((p & std::filesystem::perms::owner_read) != std::filesystem::perms::none ? "r" : "-");
         stringBuild += ((p & std::filesystem::perms::owner_write) != std::filesystem::perms::none ? "w" : "-");
@@ -640,17 +548,13 @@ std::vector<fileInfo> listDirectory(std::string path, AppData data){
         stringBuild += ((p & std::filesystem::perms::others_read) != std::filesystem::perms::none ? "r" : "-");
         stringBuild += ((p & std::filesystem::perms::others_write) != std::filesystem::perms::none ? "w" : "-");
         stringBuild += ((p & std::filesystem::perms::others_exec) != std::filesystem::perms::none ? "x" : "-");
-        
-        //count++;
-        std::cout << stringBuild << std::endl;
+
+        //std::cout << stringBuild << std::endl;
         currFile.perms = stringBuild;
         dirContents.push_back(currFile);
-        std::cout << file.path() << std::endl;
+        //std::cout << file.path() << std::endl;
         i++;
     }
-    
-    //std::cout << count << std::endl;
-    //std::cout << dirCount << std::endl;
     return dirContents;
 }
 
@@ -708,4 +612,31 @@ void splitString(std::string text, char d, std::vector<std::string>& result)
     {
         result.push_back(token);
     }
+}
+
+//Return 1 if first input should come first and 0 if it should come after.
+bool compareInfo(fileInfo file_a, fileInfo file_b) {
+    //If name is ".." then make sure this file is listed first.
+    if(file_a.name[file_a.name.size()-1] == '.') {
+        if(file_a.name[file_a.name.size()-2] == '.') {
+            return 1;
+        }
+    }
+    if(file_b.name[file_b.name.size()-1] == '.') {
+        if(file_b.name[file_b.name.size()-2] == '.') {
+        return 0;
+        }
+    }
+    //Make both the strings lowercase so they can be compared alphabetically.
+    for(int i=0; i<file_a.name.size(); i++) {
+        if(file_a.name[i] <= 'Z' && file_a.name[i] >= 'A') {
+            file_a.name[i] = file_a.name[i] - ('Z' - 'z');
+        }
+    }
+    for(int i=0; i<file_b.name.size(); i++) {
+        if(file_b.name[i] <= 'Z' && file_b.name[i] >= 'A') {
+            file_b.name[i] = file_b.name[i] - ('Z' - 'z');
+        }
+    }
+    return file_a.name < file_b.name;
 }
